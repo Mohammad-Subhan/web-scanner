@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:https": "next dev --experimental-https -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "jscanify": "^1.4.3",
+    "jspdf": "^4.2.1",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"

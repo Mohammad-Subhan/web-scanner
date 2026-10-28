@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Check8 Web Scanner (test app)
 
-## Getting Started
+Browser-based document scanning proof of concept (Next.js + jscanify + OpenCV.js). It is used to compare scan quality with the Android ML Kit Document Scanner. All processing runs locally in the browser.
 
-First, run the development server:
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # desktop: http://localhost:3000 (camera works on localhost)
+npm run dev:https    # phone: https://<your-PC-LAN-IP>:3000 (self-signed cert, accept the warning)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The camera requires a secure context, so phones must use `dev:https`. Your PC and phone must be on the same network, and the Windows firewall must allow Node on port 3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Production check: `npm run build && npm start`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it works
 
-## Learn More
+| Step | Implementation |
+| --- | --- |
+| Live outline | jscanify `findPaperContour` + `getCornerPoints` on a 320 px frame, ~3×/s (`components/CameraView.tsx`) |
+| Capture | `ImageCapture.takePhoto()` at max photo resolution; falls back to a native-size video frame (`lib/capture.ts`) |
+| Detection | jscanify on a ≤1600 px copy of the full capture, corners scaled back; implausible quads are rejected (`lib/scanner.ts`) |
+| Crop + perspective | jscanify `extractPaper` on the full-res image; output size from the document's edge lengths (≤4000 px) |
+| Raw detection view | jscanify `highlightPaper` ("Show raw detection" under the original) |
+| Filters | OpenCV.js: grayscale, adaptive-threshold B&W, background-division "Enhanced" (`lib/filters.ts`) |
+| PDF | jsPDF, JPEG bytes embedded without re-compression |
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`public/opencv.js` is OpenCV.js 4.9.0, self-hosted.
